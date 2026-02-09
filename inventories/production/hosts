@@ -1,0 +1,2 @@
+[web-server]
+192.168.192.133 ansible_user=web-server

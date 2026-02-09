@@ -1,0 +1,6 @@
+---
+- name: Deploy website source code
+  git:
+    repo: "{{ git_repo }}"
+    dest: "{{ document_root }}"
+    force: yes

@@ -1,0 +1,5 @@
+apache_port: 8080
+server_name: www.ansible-deploy.com
+server_alias: ansible-deploy
+document_root: /var/www/html/ansible-site
+git_repo: https://github.com/hazem324/ansible-static-website-deployment.git

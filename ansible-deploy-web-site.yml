@@ -1,0 +1,76 @@
+---
+- name: Deploy static website using Ansible and Apache
+  hosts: web-server
+  become: yes
+
+  tasks:
+    - name: Install required packages
+      apt:
+        name:
+          - apache2
+          - git
+          - ufw
+        state: present
+        update_cache: yes
+
+    - name: Start and enable Apache
+      service:
+        name: apache2
+        state: started
+        enabled: yes
+
+    - name: Allow Apache on port 8080
+      ufw:
+        rule: allow
+        port: "8080"
+        proto: tcp
+
+    - name: Add domain resolution for www.ansible-deploy.com
+      lineinfile:
+        path: /etc/hosts
+        line: "192.168.231.142 www.ansible-deploy.com"
+        state: present
+
+    - name: Configure Apache to listen on port 8080
+      replace:
+        path: /etc/apache2/ports.conf
+        regexp: '^Listen 80'
+        replace: 'Listen 8080'
+      notify: reload apache
+
+    - name: Deploy VirtualHost
+      copy:
+        dest: /etc/apache2/sites-available/ansible-deploy.conf
+        content: |
+          <VirtualHost *:8080>
+              ServerName www.ansible-deploy.com
+              ServerAlias ansible-deploy
+              DocumentRoot /var/www/html
+
+              <Directory /var/www/html>
+                  Require all granted
+                  AllowOverride None
+              </Directory>
+
+              ErrorLog ${APACHE_LOG_DIR}/ansible-deploy-error.log
+              CustomLog ${APACHE_LOG_DIR}/ansible-deploy-access.log combined
+          </VirtualHost>
+      notify: reload apache
+
+    - name: Enable ansible-deploy site
+      command: a2ensite ansible-deploy.conf
+      args:
+        creates: /etc/apache2/sites-enabled/ansible-deploy.conf
+      notify: reload apache
+
+    - name: Deploy website source code
+      git:
+        repo: https://github.com/example/repo.git
+        dest: /var/www/html
+        force: yes
+
+  handlers:
+    - name: reload apache
+      service:
+        name: apache2
+        state: reloaded

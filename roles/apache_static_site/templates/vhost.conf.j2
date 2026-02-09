@@ -1,0 +1,13 @@
+<VirtualHost *:{{ apache_port }}>
+    ServerName {{ server_name }}
+    ServerAlias {{ server_alias }}
+    DocumentRoot {{ document_root }}
+
+    <Directory {{ document_root }}>
+        Require all granted
+        AllowOverride None
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/ansible-deploy-error.log
+    CustomLog ${APACHE_LOG_DIR}/ansible-deploy-access.log combined
+</VirtualHost>

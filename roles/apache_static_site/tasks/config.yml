@@ -1,0 +1,31 @@
+---
+- name: Allow Apache port
+  ufw:
+    rule: allow
+    port: "{{ apache_port }}"
+    proto: tcp
+
+- name: Add domain resolution
+  lineinfile:
+    path: /etc/hosts
+    line: "192.168.192.133 {{ server_name }}"
+    state: present
+
+- name: Configure Apache port
+  replace:
+    path: /etc/apache2/ports.conf
+    regexp: '^Listen 80$'
+    replace: "Listen {{ apache_port }}"
+  notify: reload apache
+
+- name: Deploy VirtualHost
+  template:
+    src: vhost.conf.j2
+    dest: /etc/apache2/sites-available/ansible-deploy.conf
+  notify: reload apache
+
+- name: Enable site
+  command: a2ensite ansible-deploy.conf
+  args:
+    creates: /etc/apache2/sites-enabled/ansible-deploy.conf
+  notify: reload apache
